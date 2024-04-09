@@ -60,30 +60,35 @@ namespace StatueShorts
         [HarmonyPatch(typeof(Object), nameof(Object.DayUpdate))]
         public class Object_DayUpdate_Patch
         {
-            public static bool Prefix(Object __instance, GameLocation location)
+            public static bool Prefix(Object __instance)
             {
+                GameLocation location = __instance.Location;
+
                 if (!Config.ModEnabled || __instance.isTemporarilyInvisible || !__instance.bigCraftable.Value || __instance.Name != "Solid Gold Lewis" || !__instance.modData.TryGetValue(modKey, out var which) || location is not Town)
                     return true;
-                var obj = new Object(Vector2.Zero, 164, false);
+                var obj = ItemRegistry.Create<Object>("(BC)164");
                 obj.modData[modKey] = which;
                 if (Game1.random.NextDouble() < 0.9)
                 {
-                    if (Game1.getLocationFromName("ManorHouse").isTileLocationTotallyClearAndPlaceable(22, 6))
+                    GameLocation manorHouse = Game1.RequireLocation("ManorHouse");
+                    if (manorHouse.CanItemBePlacedHere(new Vector2(22f, 6f)))
                     {
                         if (!Game1.player.hasOrWillReceiveMail("lewisStatue"))
                         {
                             Game1.mailbox.Add("lewisStatue");
                         }
-                        Game1.getLocationFromName("ManorHouse").objects.Add(new Vector2(22f, 6f), obj);
+                        manorHouse.objects.Add(new Vector2(22f, 6f), obj);
                     }
+                    return false;
                 }
-                else if (Game1.getLocationFromName("AnimalShop").isTileLocationTotallyClearAndPlaceable(11, 6))
+                GameLocation animalShop = Game1.RequireLocation("AnimalShop");
+                if (animalShop.CanItemBePlacedHere(new Vector2(11f, 6f)))
                 {
                     if (!Game1.player.hasOrWillReceiveMail("lewisStatue"))
                     {
                         Game1.mailbox.Add("lewisStatue");
                     }
-                    Game1.getLocationFromName("AnimalShop").objects.Add(new Vector2(11f, 6f), obj);
+                    animalShop.objects.Add(new Vector2(11f, 6f), obj);
                 }
                 __instance.rot();
                 return false;
@@ -102,7 +107,7 @@ namespace StatueShorts
                     __result = true;
                     if (!justCheckingForActivity)
                     {
-                        Game1.createObjectDebris(which == "trimmed" ? 71 : 789, (int)__instance.TileLocation.X, (int)__instance.TileLocation.Y, who.currentLocation);
+                        Game1.createObjectDebris(which == "trimmed" ? "(O)71" : "(O)789", (int)__instance.TileLocation.X, (int)__instance.TileLocation.Y, who.currentLocation);
                         __instance.modData.Remove(modKey);
                         Game1.playSound("dwop");
                     }
@@ -125,12 +130,15 @@ namespace StatueShorts
         [HarmonyPatch(typeof(Object), nameof(Object.performRemoveAction))]
         public class Object_performRemoveAction_Patch
         {
-            public static void Prefix(Object __instance, Vector2 tileLocation, GameLocation environment)
+            public static void Prefix(Object __instance)
             {
+                GameLocation environment = __instance.Location;
+                Vector2 tileLocation = __instance.TileLocation;
+
                 if (!Config.ModEnabled ||!__instance.bigCraftable.Value || __instance.Name != "Solid Gold Lewis" || !__instance.modData.TryGetValue(modKey, out var which))
                     return;
 
-                Game1.createObjectDebris(which == "trimmed" ? 71 : 789, (int)__instance.TileLocation.X, (int)__instance.TileLocation.Y, environment);
+                Game1.createObjectDebris(which == "trimmed" ? "(O)71" : "(O)789", (int)__instance.TileLocation.X, (int)__instance.TileLocation.Y, environment);
 
             }
         }
